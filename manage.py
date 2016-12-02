@@ -17,7 +17,7 @@ def init_db():
     ManagerInstead.initdb()
 
 
-manager.add_command("runserver", Server(use_debugger=True, use_reloader=True, host='127.0.0.1'))
+manager.add_command("runserver", Server(use_debugger=False, use_reloader=True, host='127.0.0.1'))
 manager.add_command('shell', Shell(make_context=_make_context))
 
 if __name__ == '__main__':
