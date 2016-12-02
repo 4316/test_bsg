@@ -61,7 +61,7 @@ API Documentation
 Example
 -------
 
-The following `curl` command registers a new user with username `miguel` and password `python`:
+The following `curl` command registers a new user with username `some@mail` and password `test`:
 
     $ curl -i -X POST -H "Content-Type: application/json" -d '{"email":"some@mail","password":"test"}' http://127.0.0.1:5000/api/users
     HTTP/1.0 201 CREATED
@@ -74,22 +74,66 @@ The following `curl` command registers a new user with username `miguel` and pas
       "email": "some@mail"
     }
 
-Insert post of user:
-    $ curl -u a@s:python -i -X POST -H "Content-Type: application/json" -d '{"title":"header","body":"footer"}' http://127.0.0.1:5000/api/insert
+Insert new post of user:
+    
+    $ curl -u some@mail:test -i -X POST -H "Content-Type: application/json" -d '{"title":"header","body":"footer"}' http://127.0.0.1:5000/api/insert
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 60
+    Server: Werkzeug/0.11.11 Python/3.4.3+
+    Date: Fri, 02 Dec 2016 03:48:11 GMT
+    
+    {"email": "some@mail", "body": "footer", "title": "header"}
+
+    $ curl -u some@mail:test -i -X POST -H "Content-Type: application/json" -d '{"title":"protected","body":"some text"}' http://127.0.0.1:5000/api/insert
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 66
+    Server: Werkzeug/0.11.11 Python/3.4.3+
+    Date: Fri, 02 Dec 2016 03:54:21 GMT
+    
+    {"email": "some@mail", "body": "some text", "title": "protected"}
+
+And search:
+
+    $ curl -u some@mail:test -i -X POST -H "Content-Type: application/json" -d '{"search":"e"}' http://127.0.0.1:5000/api/search
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 84
+    Server: Werkzeug/0.11.11 Python/3.4.3+
+    Date: Fri, 02 Dec 2016 04:01:21 GMT
+    
+    {"email": "some@mail", "posts": [{"header": "footer"}, {"protected": "some text"}]}
+    
+    $ curl -u some@mail:test -i -X POST -H "Content-Type: application/json" -d '{"search":"some"}' http://127.0.0.1:5000/api/search
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 62
+    Server: Werkzeug/0.11.11 Python/3.4.3+
+    Date: Fri, 02 Dec 2016 04:04:20 GMT
+
+    {"email": "some@mail", "posts": [{"protected": "some text"}]}
+
 
 These credentials can now be used to access protected resources:
 
     $ curl -u some@mail:test -i -X GET http://127.0.0.1:5000/api/resource
     HTTP/1.0 200 OK
     Content-Type: application/json
-    Content-Length: 36
+    Content-Length: 84
     Server: Werkzeug/0.11.11 Python/3.4.3+
-    Date: Fri, 02 Dec 2016 03:37:07 GMT
-    
-    {
-      "email": "some@mail", "posts": []
-    }
+    Date: Fri, 02 Dec 2016 04:02:34 GMT
+
+    {"email": "some@mail", "posts": [{"header": "footer"}, {"protected": "some text"}]}
+
     $ curl -u some@mail:test -i -X POST -H "Content-Type: application/json" -d '{"start":"0","end":"1"}' http://127.0.0.1:5000/api/resource
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 56
+    Server: Werkzeug/0.11.11 Python/3.4.3+
+    Date: Fri, 02 Dec 2016 04:02:59 GMT
+
+    {"email": "some@mail", "posts": [{"header": "footer"}]}
 
 Using the wrong credentials the request is refused:
 
@@ -105,41 +149,25 @@ Using the wrong credentials the request is refused:
 
 Finally, to avoid sending username and password with every request an authentication token can be requested:
 
-    $ curl -u miguel:python -i -X GET http://127.0.0.1:5000/api/token
+    $ curl -u some@mail:test -i -X GET http://127.0.0.1:5000/api/token
     HTTP/1.0 200 OK
     Content-Type: application/json
     Content-Length: 153
     Server: Werkzeug/0.11.11 Python/3.4.3+
-    Date: Fri, 02 Dec 2016 03:39:40 GMT
+    Date: Fri, 02 Dec 2016 03:56:38 GMT
     
     {
       "duration": 600,
-      "token": "eyJpYXQiOjE0ODA2NDk5ODAsImFsZyI6IkhTMjU2IiwiZXhwIjoxNDgwNjUwNTgwfQ.eyJpZCI6MX0.HlU-LHHcfj56jalrBzeuMzp5aLTy1XpwfwcXG5lgi0A"
+      "token": "eyJpYXQiOjE0ODA2NTA5OTgsImFsZyI6IkhTMjU2IiwiZXhwIjoxNDgwNjUxNTk4fQ.eyJpZCI6MX0.udVsu3VS-qZBSflI6Df58qqXB7NSHSdFv-moXRRmW7c"
     }
 
 And now during the token validity period there is no need to send username and password to authenticate anymore:
 
-    $ curl -u eyJpYXQiOjE0ODA2NDk5ODAsImFsZyI6IkhTMjU2IiwiZXhwIjoxNDgwNjUwNTgwfQ.eyJpZCI6MX0.HlU-LHHcfj56jalrBzeuMzp5aLTy1XpwfwcXG5lgi0A:q -i -X GET http://127.0.0.1:5000/api/resource
+    $ curl -u eyJpYXQiOjE0ODA2NTA5OTgsImFsZyI6IkhTMjU2IiwiZXhwIjoxNDgwNjUxNTk4fQ.eyJpZCI6MX0.udVsu3VS-qZBSflI6Df58qqXB7NSHSdFv-moXRRmW7c:q -i -X GET http://127.0.0.1:5000/api/resource
     HTTP/1.0 200 OK
     Content-Type: application/json
-    Content-Length: 36
+    Content-Length: 84
     Server: Werkzeug/0.11.11 Python/3.4.3+
-    Date: Fri, 02 Dec 2016 03:41:07 GMT
-    
-    {
-      "email": "some@mail", "posts": []
-    }
+    Date: Fri, 02 Dec 2016 03:57:47 GMT
 
-Once the token expires it cannot be used anymore and the client needs to request a new one. Note that in this last example the password is arbitrarily set to `x`, since the password isn't used for token authentication.
-
-An interesting side effect of this implementation is that it is possible to use an unexpired token as authentication to request a new token that extends the expiration time. This effectively allows the client to change from one token to the next and never need to send username and password after the initial token was obtained.
-
-Change Log
-----------
-
-**v0.3** - Return token duration.
-
-**v0.2** - Return a 201 status code and Location header from */api/users* endpoint.
-
-**v0.1** - Initial release.
-
+    {"email": "some@mail", "posts": [{"header": "footer"}, {"protected": "some text"}]}
